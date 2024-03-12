@@ -12,18 +12,21 @@ class Kamal::Configuration
   attr_reader :destination, :raw_config
 
   class << self
-    def create_from(config_file:, destination: nil, version: nil)
+    def create_from(config_file:, destination: nil, version: nil, skip_hooks: nil)
+      pre_config_hook_file = Pathname.new(File.expand_path(".kamal/hooks/pre-config"))
+      SSHKit::Backend::Local.new.execute(pre_config_hook_file) if pre_config_hook_file.exist?
+
       raw_config = load_config_files(config_file, *destination_config_file(config_file, destination))
 
       new raw_config, destination: destination, version: version
     end
 
     private
-      def load_config_files(*files)
-        files.inject({}) { |config, file| config.deep_merge! load_config_file(file) }
+      def load_config_files(*files, skip_hooks: nil)
+        files.inject({}) { |config, file| config.deep_merge! load_config_file(file, skip_hooks: skip_hooks) }
       end
 
-      def load_config_file(file)
+      def load_config_file(file, skip_hooks: nil)
         if file.exist?
           # Newer Psych doesn't load aliases by default
           load_method = YAML.respond_to?(:unsafe_load) ? :unsafe_load : :load

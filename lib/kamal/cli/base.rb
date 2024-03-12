@@ -62,7 +62,8 @@ module Kamal::Cli
           commander.configure \
             config_file: Pathname.new(File.expand_path(options[:config_file])),
             destination: options[:destination],
-            version: options[:version]
+            version: options[:version],
+            skip_hooks: options[:skip_hooks]
 
           commander.specific_hosts    = options[:hosts]&.split(",")
           commander.specific_roles    = options[:roles]&.split(",")
@@ -150,7 +151,7 @@ module Kamal::Cli
             KAMAL.with_verbosity(:debug) { execute *KAMAL.hook.run(hook, **details, **extra_details) }
           rescue SSHKit::Command::Failed
             raise HookError.new("Hook `#{hook}` failed")
-          end
+      end
         end
       end
 
